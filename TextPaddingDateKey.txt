@@ -1,0 +1,3 @@
+Text.From(Date.Year([DateValue])) &
+Text.PadStart(Text.From(Date.Month([DateValue])), 2, "0") &
+Text.PadStart(Text.From(Date.Day([DateValue])), 2, "0")
