@@ -1,0 +1,31 @@
+= (StartDate as date, EndDate as date, optional Culture as nullable text) as table =>
+  let
+    // Determine number of days between start and end date. Add 1 because date excludes outer values
+    DayCount = Duration.Days(Duration.From(EndDate - StartDate)) + 1 ,
+    // Create a Dates list object starting at the start date, for the duration of the day count, increment of one year
+    Source = List.Dates(StartDate,DayCount,#duration(1,0,0,0)),
+    // Turn list into table and transform to Date Type
+    TableFromList = Table.TransformColumnTypes(Table.FromList(Source, Splitter.SplitByNothing()),{{"Column1", type date}}),
+    // Rename to date
+    RenamedColumns = Table.RenameColumns(TableFromList,{{"Column1", "Date"}}),
+    // Insert columns for different units within the date dimension and supporting columns for sorting
+    // Optional Culture parameter is used where applicable
+    InsertYear = Table.AddColumn(RenamedColumns, "Year", each Date.Year([Date])),
+    InsertQuarter = Table.AddColumn(InsertYear, "QuarterNumber", each Date.QuarterOfYear([Date])),
+    InsertMonth = Table.AddColumn(InsertQuarter, "MonthNumber", each Date.Month([Date])),
+    InsertDay = Table.AddColumn(InsertMonth, "DayOfMonth", each Date.Day([Date])),
+    InsertDayInt = Table.AddColumn(InsertDay, "DateInt", each [Year] * 10000 + [MonthNumber] * 100 + [DayOfMonth]),
+    InsertMonthName = Table.AddColumn(InsertDayInt, "Month", each Date.ToText([Date], "MMMM", Culture), type text),
+    InsertCalendarMonth = Table.AddColumn(InsertMonthName, "Month Of Year", each (try(Text.Range([Month],0,3)) otherwise [Month]) & " " & Number.ToText([Year])),
+    InsertCalendarQtr = Table.AddColumn(InsertCalendarMonth, "Quarter of Year", each "Q" & Number.ToText([QuarterNumber]) & " " & Number.ToText([Year])),
+    InsertDayWeek = Table.AddColumn(InsertCalendarQtr, "DayInWeek", each Date.DayOfWeek([Date])),
+    InsertDayName = Table.AddColumn(InsertDayWeek, "Day Of Week Name", each Date.ToText([Date], "dddd", Culture), type text),
+    InsertWeekStarting = Table.AddColumn(InsertDayName, "Week Starting", each Date.StartOfWeek([Date]), type date),
+    InsertWeekEnding = Table.AddColumn(InsertWeekStarting, "Week Ending", each Date.EndOfWeek([Date]), type date),
+    InsertMonthYrSort = Table.AddColumn(InsertWeekEnding, "MonthYrSort", each Date.ToText([Date], "yyyyMM", Culture), type number),
+    InsertQuarterSort = Table.AddColumn(InsertMonthYrSort, "QuarterYrSort", each Number.ToText([Year]) & Number.ToText([QuarterNumber])),
+    ChangeTypes2 = Table.TransformColumnTypes(InsertQuarterSort, {{"MonthYrSort", type number},{"QuarterYrSort", type number}}),
+    InsertWeekOfYr = Table.AddColumn(ChangeTypes2, "Week", each "Week " & Number.ToText(Date.WeekOfYear([Date])), type text),
+    InsertDateKey = Table.AddColumn(InsertWeekOfYr , "DateKey", each Date.ToText([Date], "YYYYMMDD"), type text)
+  in
+    InsertDateKey
