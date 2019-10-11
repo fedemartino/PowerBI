@@ -1,0 +1,9 @@
+= let q = (date) => 
+let
+    Source = (#date(1970, 1, 1) + #duration(0, 0, 0, date))
+in
+    Text.From(Date.Year(Source)) &
+	Text.PadStart(Text.From(Date.Month(Source)), 2, "0") &
+	Text.PadStart(Text.From(Date.Day(Source)), 2, "0")
+in
+    q
