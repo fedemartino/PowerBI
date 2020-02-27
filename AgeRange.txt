@@ -1,0 +1,21 @@
+= () as table =>
+ let
+
+ Source = List.Range({0..110}, 0),
+ TableFromList = Table.FromList(Source, Splitter.SplitByNothing()),
+ 
+  // Change that table's one column to type Int
+ ChangedType = Table.TransformColumnTypes(TableFromList,{{"Column1", Int32.Type}}),
+ 
+ // Rename column to Age
+ RenamedColumns = Table.RenameColumns(ChangedType,{{"Column1", "Age"}}),
+
+ // Insert column for age range
+ InsertAgeRange = Table.AddColumn(RenamedColumns, "Rango Edad", 
+ each if [Age] >= 0 and [Age] < 16 then "0-15" else 
+ if [Age] >= 16 and [Age] < 31 then "16-30" else
+ if [Age] >= 31 and [Age] < 61 then "31-60" else
+ if [Age] >= 61 and [Age] < 100 then "61-100" else ">100")
+
+ in 
+ InsertAgeRange
