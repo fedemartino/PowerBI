@@ -29,6 +29,7 @@
     ChangeTypes2 = Table.TransformColumnTypes(InsertQuarterSort, {{"MonthYrSort", type number},{"QuarterYrSort", type number}}),
     InsertWeekOfYr = Table.AddColumn(ChangeTypes2, "Week", each "Week " & Number.ToText(Date.WeekOfYear([Date])), type text),
     InsertFiscalYear = Table.AddColumn(InsertWeekOfYr, "Fiscal Year", each Date.Year(Date.AddMonths([Date], -5)), type number),
-    InsertDateKey = Table.AddColumn(InsertFiscalYear , "DateKey", each Date.ToText([Date], "YYYYMMDD"), type text)
+    InsertFiscalMonth = Table.AddColumn(InsertFiscalYear, "Fiscal Month", each Date.Month(Date.AddMonths([Date], -5)), type number),
+    InsertDateKey = Table.AddColumn(InsertFiscalMonth , "DateKey", each Date.ToText([Date], "YYYYMMDD"), type text)
   in
     InsertDateKey
