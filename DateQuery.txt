@@ -10,15 +10,15 @@
     RenamedColumns = Table.RenameColumns(TableFromList,{{"Column1", "Date"}}),
     // Insert columns for different units within the date dimension and supporting columns for sorting
     // Optional Culture parameter is used where applicable
-    InsertYear = Table.AddColumn(RenamedColumns, "Year", each Date.Year([Date])),
-    InsertQuarter = Table.AddColumn(InsertYear, "QuarterNumber", each Date.QuarterOfYear([Date])),
-    InsertMonth = Table.AddColumn(InsertQuarter, "MonthNumber", each Date.Month([Date])),
-    InsertDay = Table.AddColumn(InsertMonth, "DayOfMonth", each Date.Day([Date])),
+    InsertYear = Table.AddColumn(RenamedColumns, "Year", each Date.Year([Date]), type number),
+    InsertQuarter = Table.AddColumn(InsertYear, "QuarterNumber", each Date.QuarterOfYear([Date]), type number),
+    InsertMonth = Table.AddColumn(InsertQuarter, "MonthNumber", each Date.Month([Date]), type number),
+    InsertDay = Table.AddColumn(InsertMonth, "DayOfMonth", each Date.Day([Date]), type number),
     InsertDayInt = Table.AddColumn(InsertDay, "DateInt", each [Year] * 10000 + [MonthNumber] * 100 + [DayOfMonth]),
     InsertMonthName = Table.AddColumn(InsertDayInt, "Month", each Date.ToText([Date], "MMMM", Culture), type text),
     InsertCalendarMonth = Table.AddColumn(InsertMonthName, "Month Of Year", each (try(Text.Range([Month],0,3)) otherwise [Month]) & " " & Number.ToText([Year])),
     InsertCalendarQtr = Table.AddColumn(InsertCalendarMonth, "Quarter of Year", each "Q" & Number.ToText([QuarterNumber]) & " " & Number.ToText([Year])),
-    InsertDayWeek = Table.AddColumn(InsertCalendarQtr, "DayInWeek", each Date.DayOfWeek([Date])),
+    InsertDayWeek = Table.AddColumn(InsertCalendarQtr, "DayInWeek", each Date.DayOfWeek([Date]), type number),
     InsertWorkingDay = Table.AddColumn(InsertDayWeek, "WorkingDay", each if [DayInWeek] > 0 and [DayInWeek] < 6 then "1" else "0"),
     TransformColumnWD = Table.TransformColumnTypes(InsertWorkingDay,{{"WorkingDay", Int32.Type}}),
     InsertDayName = Table.AddColumn(TransformColumnWD, "Day Of Week Name", each Date.ToText([Date], "dddd", Culture), type text),
@@ -28,6 +28,7 @@
     InsertQuarterSort = Table.AddColumn(InsertMonthYrSort, "QuarterYrSort", each Number.ToText([Year]) & Number.ToText([QuarterNumber])),
     ChangeTypes2 = Table.TransformColumnTypes(InsertQuarterSort, {{"MonthYrSort", type number},{"QuarterYrSort", type number}}),
     InsertWeekOfYr = Table.AddColumn(ChangeTypes2, "Week", each "Week " & Number.ToText(Date.WeekOfYear([Date])), type text),
-    InsertDateKey = Table.AddColumn(InsertWeekOfYr , "DateKey", each Date.ToText([Date], "YYYYMMDD"), type text)
+    InsertFiscalYear = Table.AddColumn(InsertWeekOfYr, "Fiscal Year", each Date.Year(Date.AddMonths([Date], -5)), type number),
+    InsertDateKey = Table.AddColumn(InsertFiscalYear , "DateKey", each Date.ToText([Date], "YYYYMMDD"), type text)
   in
     InsertDateKey
