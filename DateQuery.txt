@@ -20,16 +20,28 @@
     InsertCalendarQtr = Table.AddColumn(InsertCalendarMonth, "Quarter of Year", each "Q" & Number.ToText([QuarterNumber]) & " " & Number.ToText([Year])),
     InsertDayWeek = Table.AddColumn(InsertCalendarQtr, "DayInWeek", each Date.DayOfWeek([Date]), type number),
     InsertWorkingDay = Table.AddColumn(InsertDayWeek, "WorkingDay", each if [DayInWeek] > 0 and [DayInWeek] < 6 then "1" else "0"),
-    TransformColumnWD = Table.TransformColumnTypes(InsertWorkingDay,{{"WorkingDay", Int32.Type}}),
-    InsertDayName = Table.AddColumn(TransformColumnWD, "Day Of Week Name", each Date.ToText([Date], "dddd", Culture), type text),
+    InsertDayName = Table.AddColumn(InsertWorkingDay, "Day Of Week Name", each Date.ToText([Date], "dddd", Culture), type text),
     InsertWeekStarting = Table.AddColumn(InsertDayName, "Week Starting", each Date.StartOfWeek([Date]), type date),
     InsertWeekEnding = Table.AddColumn(InsertWeekStarting, "Week Ending", each Date.EndOfWeek([Date]), type date),
     InsertMonthYrSort = Table.AddColumn(InsertWeekEnding, "MonthYrSort", each Date.ToText([Date], "yyyyMM", Culture), type number),
     InsertQuarterSort = Table.AddColumn(InsertMonthYrSort, "QuarterYrSort", each Number.ToText([Year]) & Number.ToText([QuarterNumber])),
-    ChangeTypes2 = Table.TransformColumnTypes(InsertQuarterSort, {{"MonthYrSort", type number},{"QuarterYrSort", type number}}),
-    InsertWeekOfYr = Table.AddColumn(ChangeTypes2, "Week", each "Week " & Number.ToText(Date.WeekOfYear([Date])), type text),
+    InsertWeekOfYr = Table.AddColumn(InsertQuarterSort, "Week", each "Week " & Number.ToText(Date.WeekOfYear([Date])), type text),
     InsertFiscalYear = Table.AddColumn(InsertWeekOfYr, "Fiscal Year", each Date.Year(Date.AddMonths([Date], -5)), type number),
     InsertFiscalMonth = Table.AddColumn(InsertFiscalYear, "Fiscal Month", each Date.Month(Date.AddMonths([Date], -5)), type number),
-    InsertDateKey = Table.AddColumn(InsertFiscalMonth , "DateKey", each Date.ToText([Date], "YYYYMMDD"), type text)
+    InsertDateKey = Table.AddColumn(InsertFiscalMonth , "DateKey", each Date.ToText([Date], "YYYYMMDD"), type text),
+    ChangeTypes = Table.TransformColumnTypes(InsertDateKey, 
+    {
+      {"Year", Int32.Type},
+      {"QuarterNumber", Int32.Type},
+      {"MonthNumber", Int32.Type},
+      {"DayOfMonth", Int32.Type},
+      {"DateInt", Int32.Type},
+      {"DayInWeek", Int32.Type},
+      {"WorkingDay", Int32.Type},
+      {"MonthYrSort", Int32.Type},
+      {"QuarterYrSort", Int32.Type},
+      {"Fiscal Year", Int32.Type},
+      {"Fiscal Month", Int32.Type}
+    })
   in
-    InsertDateKey
+    ChangeTypes
