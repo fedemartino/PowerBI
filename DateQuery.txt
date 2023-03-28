@@ -45,6 +45,7 @@ let
       {"Fiscal Month", Int32.Type}
     }),
     ChangeColumnNames = Table.RenameColumns(ChangeTypes,
+    {
       {"Year", "Año"},
       {"Week Starting", "Inicio de semana"},
       {"Week Ending", "Fin de semana"},
@@ -60,7 +61,7 @@ let
       {"QuarterYrSort", "TrimestreAño sort"},
       {"Fiscal Year", "Año Fiscal"},
       {"Fiscal Month", "Mes Fiscal"}
-    )
+    })
   in
     ChangeColumnNames
 in
