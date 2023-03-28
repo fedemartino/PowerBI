@@ -1,4 +1,5 @@
-= (StartDate as date, EndDate as date, optional Culture as nullable text) as table =>
+let
+    Source = (StartDate as date, EndDate as date, ultimoMesFiscal as number, optional Culture as nullable text) as table =>
   let
     // Determine number of days between start and end date. Add 1 because date excludes outer values
     DayCount = Duration.Days(Duration.From(EndDate - StartDate)) + 1 ,
@@ -26,8 +27,8 @@
     InsertMonthYrSort = Table.AddColumn(InsertWeekEnding, "MonthYrSort", each Date.ToText([Date], "yyyyMM", Culture), type number),
     InsertQuarterSort = Table.AddColumn(InsertMonthYrSort, "QuarterYrSort", each Number.ToText([Year]) & Number.ToText([QuarterNumber])),
     InsertWeekOfYr = Table.AddColumn(InsertQuarterSort, "Week", each "Week " & Number.ToText(Date.WeekOfYear([Date])), type text),
-    InsertFiscalYear = Table.AddColumn(InsertWeekOfYr, "Fiscal Year", each Date.Year(Date.AddMonths([Date], -5)), type number),
-    InsertFiscalMonth = Table.AddColumn(InsertFiscalYear, "Fiscal Month", each Date.Month(Date.AddMonths([Date], -5)), type number),
+    InsertFiscalYear = Table.AddColumn(InsertWeekOfYr, "Fiscal Year", each Date.Year(Date.AddMonths([Date], - ultimoMesFiscal)), type number),
+    InsertFiscalMonth = Table.AddColumn(InsertFiscalYear, "Fiscal Month", each Date.Month(Date.AddMonths([Date], - ultimoMesFiscal)), type number),
     InsertDateKey = Table.AddColumn(InsertFiscalMonth , "DateKey", each Date.ToText([Date], "YYYYMMDD"), type text),
     ChangeTypes = Table.TransformColumnTypes(InsertDateKey, 
     {
@@ -42,6 +43,25 @@
       {"QuarterYrSort", Int32.Type},
       {"Fiscal Year", Int32.Type},
       {"Fiscal Month", Int32.Type}
-    })
+    }),
+    ChangeColumnNames = Table.RenameColumns(ChangeTypes,
+      {"Year", "Año"},
+      {"Week Starting", "Inicio de semana"},
+      {"Week Ending", "Fin de semana"},
+      {"Week", "Semana"},
+      {"QuarterNumber", "Nro Trimestre"},
+      {"Quarter of Year", "Trimestre"},
+      {"MonthNumber", "Número Mes"},
+      {"DayOfMonth", "Día del mes"},
+      {"DateInt", "DateInt"},
+      {"DayInWeek", "Dia de la semana"},
+      {"WorkingDay", "Dia laborable"},
+      {"MonthYrSort", "MesAño sort"},
+      {"QuarterYrSort", "TrimestreAño sort"},
+      {"Fiscal Year", "Año Fiscal"},
+      {"Fiscal Month", "Mes Fiscal"}
+    )
   in
-    ChangeTypes
+    ChangeColumnNames
+in
+    Source
